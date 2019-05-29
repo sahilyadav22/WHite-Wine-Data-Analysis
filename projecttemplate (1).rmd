@@ -1,0 +1,492 @@
+White Wine Testing by SAHIL YADAV
+========================================================
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using in your analysis in this code
+# chunk.
+
+library(ggplot2)
+library(GGally)
+library(gridExtra)
+library(grid)
+library(memisc)
+library(dplyr)
+```
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+wset <- read.csv('C:/Users/ydvsa/Downloads/wineQualityWhites.csv')
+```
+
+The dataset uploaded is a white wine dataset which consists of 4900 observations approx. and 13 variables related to the physicochemical tests conducted to determine the quality of the wine samples listed in the dataset. 
+
+We'll be looking for various relationships amongst these variables and determine in what way they affect the quality of the wine sample. 
+
+Lets start off with looking at basic characteristics of the dataset
+
+```{r echo=FALSE, Variables}
+names(wset)
+```
+
+
+```{r echo=FALSE, Dimensions}
+dim(wset)
+```
+```{r echo=FALSE}
+str(wset)
+
+```
+```{r echo=FALSE}
+wset$X <- NULL
+
+```
+
+The X variable is deleted as it doesn't affect any of the physical or chemical properties of the dateset. 
+
+```{r echo=FALSE}
+#Checking for NA values
+wset[is.na(wset)]
+```
+Now that there are no "NA" values we can continue further.
+
+```{r echo=FALSE, Five_point_summ}
+#five number summary for all the variables in the dataset
+summary(wset)
+```
+
+Looking at the five point summary, we can see that the average mean of the 'quality' is 5.878. The minimum and maximum values are 3.00 and 6.00 respectively. 
+
+We can create a seperate variable named as 'rating' on the basis of 'quality' where if the quality ranges from between 0-4the rating would be "bad", if the quality ranges from 4-6 the rating would be "average", from 7-10 rating would be "good".
+
+```{r echo=FALSE, Rating}
+#Creating a new variable 'rating' from an existing variable 'quality'
+wset$quality <- as.numeric(wset$quality)
+
+rating <- cut(wset$quality , breaks = c(0,4,7,9), c("Bad" , "Average" , "Good"))
+
+```
+
+```{r echo=FALSE, Line}
+#plotting a bar graph for quality
+
+ggplot (wset,aes(rating)) +
+  geom_bar(aes(fill=factor(quality)))
+
+```
+
+According to the graph shown above, the number most number of wines lie in the 'average' sector i.e. quality rating between 4-7. There are a very few number wines that are considered as 'bad'. 
+
+# Univariate Plots Section
+
+To understand the structure of the dataset and the variables it consists we must create univariate plots of each variable and study them to find relationships between them in the later part of the analysis. 
+
+I shall create Histograms of each column header, identify its five point summary, check for outliers by studying the histogram and create a base to further elaborate our analysis on  the basis of our findings in this section.
+
+```{r echo=FALSE, Univariate_Plots}
+#Creating a function for making a histogram for all variables
+
+get_histogram <- function(x.var, wset, bw)
+  {
+  ggplot(wset, aes_string(x = x.var)) +
+    geom_histogram(stat = 'count', binwidth = bw)
+  
+  }
+
+```
+I have created a function above to ease the formation of histograms so I don't have to type in the code again and again. Now I'll create histograms for each of the given variables in the given dataset.
+
+```{r echo=FALSE,Fixed_Acidity}
+plt_fixed_acidity <- get_histogram('fixed.acidity',wset,1) +
+  xlab("Fixed Acidity (g / dm^3)") +
+  ggtitle('FIxed Acidity')
+```
+
+```{r echo=FALSE,volatile_Acidity}
+plt_volatile_acidity <- get_histogram('volatile.acidity',wset,1) +
+   xlab("Volatile Acidity (g / dm^3)") +
+   ggtitle('Volatile Acidity')
+```
+```{r echo=FALSE,Citric_Acid}
+plt_citric_acid <- get_histogram('citric.acid',wset,1) +
+  xlab("Citric Acid (g / dm^3)") +
+  ggtitle('Citric Acid')
+```
+```{r echo=FALSE,Acidity}
+#arranging the created histograms in the same grid for all acids
+grid.arrange(plt_fixed_acidity,plt_volatile_acidity,plt_citric_acid)
+```
+
+I have grouped the variables that inlcude acidity together to compare and contrast the differences and similarities to make identification easier. 
+
+Here we see that all three of the graphs are mainly skewed to the left. We also notice a few outliers close to the end of the graph. In the citric acid histogram you can clearly notice an abrupt peak close to 0.5 g/dm^3.
+
+
+```{r echo=FALSE,Residual_Sugar}
+#Creating a histogram for residual sugar
+plt_residual_sugar <- get_histogram('residual.sugar',wset,1) +
+  xlab(" Residual Sugar(g / dm^3)") +
+  ggtitle('Residual Sugar')
+grid.arrange(plt_residual_sugar)
+```
+
+The histogram formed is heavily skewed to the left and we can see the peak at point approx 2 g/dm^3 on the x axis. There's just one peak with a couple subsequent ones and the rest of the values are pretty much in the same range.
+
+```{r echo=FALSE,Chlorides}
+#Creating a histogram for Chlorides
+plt_chlorides <- get_histogram('chlorides',wset,1) +
+  xlab("Chlorides(g / dm^3)") +
+  ggtitle('Chlorides')
+grid.arrange(plt_chlorides)
+```
+
+Here also the histogram formed is skewed to the left. There a number of outliers after the 0.1 g/dm^3 on the x-axis. 
+
+```{r echo=FALSE,Free_SUlfur_Dioxide}
+#Creating a histogram for Free Sulfur-dioxide
+plt_free_sulfur_dioxide <- get_histogram('free.sulfur.dioxide',wset,5) +
+  xlab("Free Sulfur DiOxide(mg / dm^3)") +
+  ggtitle('Free Sulfur-dioxide')
+```
+```{r echo=FALSE,Total_SUlfur_Dioxide}
+#Creating a histogram for Total Sulfur-dioxide
+plt_total_sulfur_dioxide <- get_histogram('total.sulfur.dioxide',wset,10) +
+  xlab("Total Sulfur DiOxide(mg / dm^3)") +
+  ggtitle('Total Sulfur-dioxide')
+#Arranging the created histograms in the same grid
+grid.arrange(plt_free_sulfur_dioxide,plt_total_sulfur_dioxide)
+```
+
+As we can see both the histograms are skewed to the left but free sulfudioxide is heavily skewed whereas total sufurdioxide is partially skewed. THere are outliers present in both histograms towards the end of them. 
+
+```{r echo=FALSE,Density}
+#Creating a histogram for Density
+plt_density <- get_histogram('density',wset,1) +
+  xlab("Density(g / cm^3)") +
+  ggtitle('Density')
+grid.arrange(plt_density)
+```
+
+The range in which the density lies is very short and we don't observe any outliers as well. The histogram is pretty much evenly distributed except the one peak at 0.99g/cm^3.
+
+```{r echo=FALSE,pH}
+#Creating a histogram for pH
+plt_pH <- get_histogram('pH',wset,1) +
+  ggtitle('pH')
+##Creating a histogram for Sulphates
+plt_sulphates <- get_histogram('sulphates',wset,1) +
+  xlab("sulphates (g / dm3)") +
+  ggtitle('Sulphates')
+#Arranging them in the same grid
+grid.arrange(plt_pH,plt_sulphates)
+```
+
+In pH we observe that the histogram is normally distributed. Whereas, the sulphates histogram depicts that the histogram is skeweed to left and has a couple outliers towards the end of the histogram. 
+
+```{r echo=FALSE,alcohol}
+#Creating a histogram for Alcohol
+plt_alcohol <- get_histogram('alcohol',wset,1) +
+  xlab("Alcohol (% by volume)") +
+  ggtitle('Alcohol')
+grid.arrange(plt_alcohol)
+```
+
+The Histogram is skewed to the left as we can observe a couple of peaks between 9%-10%. Most of the Wine samples have an alcohol percentage between 9-11 % and the we start to see a slight dip in the histogram.
+
+# Univariate Analysis
+
+
+### What is the structure of your dataset?
+
+The dataset consists of 4898 entries of white wine. For each we have data 12 different characteristics or features of which one is a categorical variable (quality). The remaining variables are physical and chemical properties of white wine e.g : alcohol pH, acidity, density, etc.
+
+### What is/are the main feature(s) of interest in your dataset?
+
+The main feature of the dataset is the quality variable, on the basis of which all the wine samples are judged by us people. What's interesting is that the the quality variable is dependent upon all the physical and chemincal properties of the wines. We will find how they relate to each other in the next part of the analysis.
+
+### What other features in the dataset do you think will help support your \
+investigation into your feature(s) of interest?
+
+Mainly its the quality variable that we'll be looking at closely. But there are other features such as taste that can be dependant upon the alcohol quantity, amount of sugar etc, also we're going to look at how to various acidities complement each other and the quality. 
+
+### Did you create any new variables from existing variables in the dataset?
+
+Yes, I have created a rating variable that is derived from the quality variable. I have divided the ratings into three parts namely bad, average, good. 
+
+### Of the features you investigated, were there any unusual distributions? \
+Did you perform any operations on the data to tidy, adjust, or change the form \
+of the data? If so, why did you do this?
+
+The first variable was the index variable which was removed because it did have any impact on the quality or as a matter of fact ant other variable. It just displayed the index number of the sample. Density was a little unusually distributed. Rest all the histograms were mainly skewed to the left. 
+
+
+# Bivariate Plots Section
+
+In this part of the analysis we are goinf to create and relationships between certain variables against the quality of the wine to see what factor agffects the quality the most
+
+To do this, creating a relationship with each and every variable will become a tedious task. To save time and be more efficient with our work we are going to create a correlation matrix first to see which variable has the strongest correlation with quality and dig deeper into those relationships only. 
+
+```{r echo=FALSE, Corrplot}
+summary(wset)
+cor(wset)
+library(corrplot)
+forcorrplot<-cor(wset)
+corrplot(forcorrplot, method="color", order="hclust")
+corrplot.mixed(forcorrplot,lower="number",upper="circle",order="hclust")
+
+```
+
+From the above matrix we can notice a few things:
+
+1) Alcohol and Density have a strong negative correlation 
+
+2) Alcohol, density, chlorides, volatile acidity, total sulfur dioxide are correlated to quality where alcohol and density are strongly correlated and the rest are weak.
+
+3) Density and Residual Sugar have a strong positive correlation.
+
+4) In the univariate analysis we gropued the acidities together and thought they might related in some way. But according to the plot we can see that there is no strong relation as such. 
+
+
+So, our factors of interest have been shortened down to alcohol, density, chlorides, residual sugar, total sulfurdioxide and volatile acidity.
+
+Let's create boxplots for each of them and then summarize our findings:
+
+
+```{r echo=FALSE, Alcohol_vs_Quality}
+#Creating a Boxplot for Alcohol vs Quality
+ggplot(wset, aes(factor(quality), y=alcohol)) +
+  geom_boxplot(notch=FALSE, notchwidth = 0.8, fill="orange") +
+  ggtitle("Alcohol vs Quality") +
+  xlab("Quality")+
+  ylab("Alcohol(% by vol)")
+
+```
+```{r echo+FALSE, Quality_vs_Density}
+#Creating a Boxplot for Density vs Quality
+ggplot(wset,aes(x=factor(quality),y=density)) +
+  geom_boxplot(notch=FALSE, notchwidth = 0.8, fill="orange") +
+  ggtitle("Density vs Quality") +
+  xlab("Quality")+
+  ylab("Density (g / cm^3)")
+```
+```{r echo+FALSE, Chlorides_vs_Quality}
+#Creating a Boxplot for Chlorides vs Quality
+ggplot(wset,aes(x=factor(quality),y=chlorides)) +
+  geom_boxplot(notch=FALSE, notchwidth = 0.8, fill="orange") +
+  ggtitle("Chlorides vs Quality") +
+  xlab("Quality")+
+  ylab("chlorides (g / dm^3)")
+  
+```
+```{r echo+FALSE, Total_sulfurdioxide_vs_Quality}
+#Creating a Boxplot for Total sulfur dioxide vs Quality
+ggplot(wset,aes(x=factor(quality),y=total.sulfur.dioxide)) +
+  geom_boxplot(notch=FALSE, notchwidth = 0.8, fill="orange") +
+  ggtitle("Total Sulfur dioxide vs Quality") +
+  xlab("Quality")+
+  ylab("Total SulfurDioxide (mg / dm^3)")
+```
+```{r echo+FALSE, Volatile_Acidity_vs_Quality}
+#Creating a Boxplot for Volatile Acidity vs Quality
+ggplot(wset,aes(x=factor(quality),y=volatile.acidity)) +
+  geom_boxplot(notch=FALSE, notchwidth = 0.8, fill="orange") +
+  ggtitle("Volatile Acidity vs Quality") +
+  xlab("Quality") +
+  ylab("volatile acidity(g / dm^3)")
+```
+
+After comparing each of the shortened down physical and chemical properties against quality we can summarize :
+
+1) Higher the amount of alcohol in the wine, better the qualuty. 
+
+2) Less dense wines usually bring out better quality wine.
+
+3) Chlorides have generally no effect on the quality of the wine as such. 
+
+4) In terms of total sulfur dioxide and volatile acidity, the correlation with quality is not as high as the factors. 
+
+
+We have plotted boxplots of the factors against quality. But there are acouple of relationships that i would like to focus on too, such as alcohol and density and also density and residual sugar. 
+
+```{r echo=FALSE, Alcohol_vs_Density}
+#Creating a Scatterplot for Alcohol vs Density
+ggplot(wset, aes(x=alcohol,y=density)) +
+         geom_point(alpha=0.1,position = position_jitter(),color='red') +
+  geom_smooth(method='lm') + 
+  xlab("Alcohol(% by vol)") +
+  ylab("Density (g / cm^3)")
+  ggtitle("Alcohol vs Density")
+```
+
+There is a negative correlation between density and alcohol and after plotting a scatterplot between the above variables we can clearly see that more the amount of alcohol lesser the density. 
+
+
+```{r echo=FALSE, Density_vs_residual_sugar}
+#Creating a Scatterplot for Density vs Residual sugar
+ggplot(wset, aes(x=residual.sugar,y=density)) +
+         geom_point(alpha=0.1,position = position_jitter(),color='orange') +
+  geom_smooth(method='lm') + 
+  ggtitle("Residual Sugar vs Density") +
+  xlab("Residual Sugar (g / dm^3)") +
+  ylab("Density (g / cm^3)")
+```
+
+The scattrerplot shows a positive relation between residual sugar and density. But most of the points plotted are between 0-20g/dm^3 on the x axis. We can see 1 or 2 outliers that go beyond 30g/dm^3.
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. How did the feature(s) of interest vary with other features in \
+the dataset?
+
+I noticed a couple of relationships and plotted graphs for each one of them to get better insight and depth into each one of them. Briefly :
+
+1) The major factors affecting quality are alcohol, density, volatile acidity, chlorides and total sulfur dioxide.
+
+2) Density has a stong positive and negative relationship with residual sugar and alcohol respectively. 
+
+3) What was surprising that all the given acidities have no relationship with them whatsoever.
+
+### Did you observe any interesting relationships between the other features \
+(not the main feature(s) of interest)?
+
+A few interesting relationships were observed. Density had a strong relationship with residual sugar and alcohol which in turn effects the quality of the wine. Also residual sugar as a whole had a strong relationship with each property of wines.
+
+### What was the strongest relationship you found?
+
+The strongest relation that I found was between residual sugar and denstiy which had a positive correlation coeff. (Pearson) of 0.84 approx. 
+
+# Multivariate Plots Section
+
+```{r echo=FALSE, Multivariate_Plot_1}
+#Creating a multivariate scatterplot between Volatile acidity and alcohol on the basis of rating
+ggplot(wset, aes(x=alcohol,y=volatile.acidity,color=rating)) +
+         geom_point(alpha=0.2,position = position_jitter()) + 
+  geom_smooth() + 
+  ggtitle("Plot 1") +
+  xlab("Alcohol(% by vol)") +
+  ylab("Volatile Acidity(g / dm^3)")
+
+```
+
+Most good wines have high amounts of alcohol with minimal amounts of volatile acidity. we can see that the average and good wine intersext each other at 11 on the x axis and almost take the same curve. 
+
+```{r echo=FALSE, Multivariate_Plot_2}
+#Creating a scatterplot between denisty and residual sugar 
+ggplot(wset, aes(x=residual.sugar,y=density,color=rating)) +
+         geom_point(alpha=0.2,position = position_jitter()) + 
+  geom_smooth() + 
+  ggtitle("Plot 2") +
+  xlab("Residual Sugar (g / dm^3)") +
+  ylab("Density(g / cm^3")
+
+```
+
+The plot is dominated with green points i.e. most of the wines are of average quality and we dont observe a strong relation between the given three variables.
+Hence, our initial investigation has been proven wrong.
+
+
+```{r echo=FALSE, Multivariate_plot_3}
+
+ggplot(wset, aes(x=alcohol,y=density,color=factor(quality))) +
+         geom_point(alpha=0.1,position = position_jitter()) +
+  geom_smooth(method='lm') + 
+  ggtitle("Plot 3") +
+  xlab("Density(g / cm^3") +
+  ylab("Alcohol(% by vol")
+```
+
+The same thing is observed here as well. Earlier we noticed that all wines have one thing in common that is higher alcohol with low density are considered to be good quality wines. But the line plotted for each quality(0-10) we can see that their almost overlapping each other. 
+
+Nothing solid can be taken out of this. 
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. Were there features that strengthened each other in terms of \
+looking at your feature(s) of interest?
+
+I observed a couple of relationships in this part while making multivariate plots and unfortunately there is not strong relationship between either of the 3 variables taken into account.
+
+### Were there any interesting or surprising interactions between features?
+
+I had a feeling that I would be able to find a strong relationship between the alcohol, density and quality as they had the strongest correlation coefficients with respect to quality. What was surprising is not only they did not have a strong relation but the lines were overlapping each other, which doesn't give us a definitive output to the analysis. Its basically being portrayed that all wines are made in the same way with a few minute exceptions. 
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the \
+strengths and limitations of your model.
+
+No I haven't created a model.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+```{r echo=FALSE, Plot_One}
+
+ggplot (wset,aes(rating)) +
+  geom_bar(aes(fill=factor(quality))) + 
+  ggtitle('Plot 1')
+
+```
+
+### Description One
+
+I have created a new variable by the name of rating on the basis of an existing variable which is quality. I have categorized the wines as bad(0-3), average(4-7) and good(8-10). And then I have plotted a bar graph to get visual representation of the data to determine under which category do the most number of wines lie in. 
+
+As shown in the graph, the most number of wines displayed are of average category under which most wines have a quality rating of 6. 
+
+Whats strange is that the number of good and bad wines are very few in number. 
+
+### Plot Two
+```{r echo=FALSE,Plot_2}
+
+ggplot(wset, aes(x=residual.sugar,y=density,color=rating)) +
+         geom_point(alpha=0.2,position = position_jitter()) + 
+  geom_smooth() + 
+  ggtitle("Plot 2") +
+  xlab("Residual Sugar (g / dm^3)") +
+  ylab("Density(g / cm^3")
+
+```
+
+### Description Two
+
+The highest correlation that we observed in the correlation matrix was between residual sugar and density which was 0.84 approximately. We can clearly see that that theplot is dominated with green points, hence most of the wine samples are of averating rating. We see a positive correlation i.e. higher the density, higher the residual sugar. 
+
+But unfortunately we can't determine the quality or rating of the wine samples on the basis of the 3 given variables in the plot. 
+
+### Plot Three
+```{r echo=FALSE,Plot_3}
+
+ggplot(wset, aes(x=alcohol,y=density,color=factor(quality))) +
+         geom_point(alpha=0.1,position = position_jitter()) +
+  geom_smooth(method='lm') + 
+  ggtitle("Plot 3") +
+  xlab("Density(g / cm^3)") +
+  ylab("Alcohol(% by vol)")
+```
+
+### Description Three
+
+Here I have take into account 3 variables namely alcohol, quality and quality and created a scatterplot out of it to examine the the strength of their relationship. But unfortunately, even after having a strong correlation the plot doesn't give us strong evidence that these are the factors affecting quality the most.
+
+# Reflection
+
+The dataset that I chose was the white wine dataset which consists of 4898 observations with 12 variables which were mainly the physical and chemical properties of the wines. We had a decisive variable quality that determined how good the wine was on a sacle of 0-10. 
+
+I created a seperate variable rating to categorize the wine samples as good, average or bad on the basis of the quality of the wine. 
+
+Further to learn more in detail about what parameters affect the quality variable i created a correlation matrix to find out of the correlation of each variable with one another and shortlisted highly correlated variables and conducted my analysis further on those variables only to save time. 
+
+After creating all the plots and finding the correlation amongst several variables I have come to a conclusion that even the most highly correlated variables do not complement the quality of the wine sample. One major drawback that I would like to highlight is that the dataset was filled with wine samples that had an 'average' rating(4-7). In order to come to a conclusion determining the factors respnsible for the quality we need more data samples of wines that have a rating of 'bad' and 'good'. 
+
+If I was given the same dataset with more number of samples of wine having qualities between 0-4 and 7-10 It would become much easier to determine the properties complementing the quality of the wine sample. Also, Many customers drink wine on the basis of the taste of the wine. Having more parameters that reflect upon how the wine tastes could help us in future analysis
+
+
+References. - 
+
+http://www.sthda.com/english/wiki/ggcorrplot-visualization-of-a-correlation-matrix-using-ggplot2
